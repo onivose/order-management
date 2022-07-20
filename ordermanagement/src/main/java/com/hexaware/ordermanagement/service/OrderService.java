@@ -9,51 +9,43 @@ import java.util.Optional;
 public interface OrderService {
 
     /**
-     * finds all orders in the database
-     * @return List of orders or null if no orders are present
+     *
+     * @return
      */
     List<Order> getAllOrders();
 
     /**
-     * finds all orders in the database with total greater than the given value
-     * @return List of orders or null if no orders are present
+     *
+     * @return
      */
     List<Order> findAllWithTotalGreaterThan(Double total);
 
     /**
-     * finds all orders in the database with total less than the given value
-     * @return List of orders or null if no orders are present
+     *
+     * @return
      */
     List<Order> findAllWithTotalLessThan(Double total);
 
     /**
-     * finds all orders for the customer wth the given id
+     *
      * @param customerId
-     * @return List of orders or null if no orders are present for that customer
+     * @return
      */
     List<Order> getAllOrdersByCustomerId(Integer customerId);
 
     /**
-     * gets a specific order by orderId
+     *
      * @param orderId
-     * @return order
+     * @return
      */
     Order getOrderById(Integer orderId);
 
     /**
-     * creates an order with no products and persists it into the database
-     * @param order
-     * @return order
+     *
+     * @param customerId
+     * @return
      */
     Order beginNewOrder(Integer customerId);
-
-    /**
-     * Calculates the total sum of an order
-     *
-     * @param order
-     * @return total sum of products in order
-     */
-    Double calculateOrderTotal (Order order);
 
     Order submitOrder(List<Integer> productIds, Integer orderId);
 }

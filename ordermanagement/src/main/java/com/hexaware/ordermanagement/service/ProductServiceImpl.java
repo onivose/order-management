@@ -117,7 +117,7 @@ public class ProductServiceImpl implements ProductService{
     }
 
     /**
-     * gets a specific product by productId
+     *
      *
      * @param productId
      * @return order

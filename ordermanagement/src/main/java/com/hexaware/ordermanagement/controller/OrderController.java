@@ -43,21 +43,7 @@ public class OrderController {
     public ResponseEntity<JsonResponse> beginNewOrder(@PathVariable Integer customerId){
 
         Customer author = customerService.getCustomerById(customerId);
-
-        // Null check to validate that customer exists
-        if (author == null){
-            JsonResponse jsonResponse = new JsonResponse(false, "Customer does not exist with id " + customerId, null);
-            return new ResponseEntity<>(jsonResponse, HttpStatus.CONFLICT);
-        }
-
         Order newOrder = orderService.beginNewOrder(customerId);
-
-        //Null check to validate that new order was successfully created
-        if (newOrder == null){
-            JsonResponse jsonResponse = new JsonResponse(false, "Order not created: Customer does not exist with id " + customerId, null);
-            return new ResponseEntity<>(jsonResponse, HttpStatus.CONFLICT);
-        }
-
         JsonResponse jsonResponse = new JsonResponse(true, "Order successfully created", newOrder);
         return new ResponseEntity<>(jsonResponse, HttpStatus.CREATED);
 
@@ -71,32 +57,6 @@ public class OrderController {
 
         Order orderToSubmit = orderService.getOrderById(orderId);
 
-        //Null check to validate that there is an order started with that id
-        if(orderToSubmit == null){
-            JsonResponse jsonResponse = new JsonResponse(false, "No order exist with order Id: " + orderId, null);
-            return new ResponseEntity<>(jsonResponse, HttpStatus.NOT_FOUND);
-        }
-
-        //Check to validate that the order with that id has not already been submitted
-        else if(orderToSubmit.getSubmitted()){
-            JsonResponse jsonResponse = new JsonResponse(false,
-                    "Order with id " + orderId + " has already been submitted",
-                    null);
-            return new ResponseEntity<>(jsonResponse, HttpStatus.CONFLICT);
-        }
-
-        // null check to make sure each product in the order exists
-        for (Integer id : productIds) {
-            // get the product by id
-            Product orderProduct = productService.getProductById(id);
-
-            if (orderProduct == null) {
-                JsonResponse jsonResponse = new JsonResponse(false, "No product exist with Id: " + id, null);
-                return new ResponseEntity<>(jsonResponse, HttpStatus.NOT_FOUND);
-            }
-        }
-
-        // If all the validation checks are passed -> submit the order
         Order submittedOrder = orderService.submitOrder(productIds, orderId);
 
         JsonResponse jsonResponse = new JsonResponse(true, "Order successfully submitted", submittedOrder);
@@ -112,22 +72,17 @@ public class OrderController {
         JsonResponse jsonResponse;
         List<Order> orderListFromDb = orderService.getAllOrders();
 
-        if(orderListFromDb.isEmpty()) {
-            jsonResponse = new JsonResponse(false, "No orders available to display", null);
-            return new ResponseEntity<>(jsonResponse, HttpStatus.NOT_FOUND);
-        }
         jsonResponse = new JsonResponse(true, "All orders successfully retrieved", orderListFromDb);
         return ResponseEntity.ok(jsonResponse);
     }
 
     //WORKS
     /**
-     * Endpoint to find all orders in the database with total greater than the given value in path parameter
      *
-     * Method: GET
-     * Url: api/v1/order/greaterThan/{total}
-     * @param total -> total price to filter orders
-     * @return JsonResponse with a list of orders as the "data" parameter or null if no orders are present that meet the criteria
+     *
+     *
+     * @param total
+     * @return
      */
     @GetMapping("/greaterThan/{total}")
     ResponseEntity<JsonResponse> findAllWithTotalGreaterThan(@PathVariable Double total){
@@ -135,13 +90,6 @@ public class OrderController {
 
         JsonResponse jsonResponse;
         List<Order> orderListFromDb = orderService.findAllWithTotalGreaterThan(total);
-
-        if(orderListFromDb.isEmpty()) {
-            jsonResponse = new JsonResponse(false,
-                    "No order(s) with total greater than $"+ total + " available to display",
-                    null);
-            return new ResponseEntity<>(jsonResponse, HttpStatus.NOT_FOUND);
-        }
 
         Integer numOfOrders = orderListFromDb.size();
         jsonResponse = new JsonResponse(true,
@@ -151,12 +99,12 @@ public class OrderController {
     }
 
     /**
-     * Endpoint to find all orders in the database with total less than the given value in path parameter
      *
-     * Method: GET
-     * Url: api/v1/order/lessThan/{total}
-     * @param total -> total price to filter orders
-     * @return JsonResponse with a list of orders as the "data" parameter or null if no orders are present that meet the criteria
+     *
+     *
+     *
+     * @param total
+     * @return
      */
     @GetMapping("/lessThan/{total}")
     ResponseEntity<JsonResponse> findAllWithTotalLessThan(@PathVariable Double total){
@@ -164,13 +112,6 @@ public class OrderController {
 
         JsonResponse jsonResponse;
         List<Order> orderListFromDb = orderService.findAllWithTotalLessThan(total);
-
-        if(orderListFromDb.isEmpty()) {
-            jsonResponse = new JsonResponse(false,
-                    "No order(s) with total less than $"+ total + " available to display",
-                    null);
-            return new ResponseEntity<>(jsonResponse, HttpStatus.NOT_FOUND);
-        }
 
         Integer numOfOrders = orderListFromDb.size();
         jsonResponse = new JsonResponse(true,
@@ -193,11 +134,6 @@ public class OrderController {
         JsonResponse jsonResponse;
         Optional<Order> orderFromDb = Optional.ofNullable(orderService.getOrderById(orderId));
 
-        if(!orderFromDb.isPresent()) {
-            jsonResponse = new JsonResponse(false, "No order exist with order Id: " + orderId, null);
-            return new ResponseEntity<>(jsonResponse, HttpStatus.NOT_FOUND);
-        }
-
         jsonResponse = new JsonResponse(true, "Order with order Id: " + orderId + " found", orderFromDb);
         return ResponseEntity.ok(jsonResponse);
     }
@@ -207,25 +143,11 @@ public class OrderController {
     public ResponseEntity<JsonResponse> getAllOrdersForCustomerWithId(@PathVariable Integer customerId){
         logger.info("REQUEST: " + "--GET-- api/v1/order/customer/" + customerId + " @ " + LocalDateTime.now());
 
-        try {
-            JsonResponse jsonResponse;
-            List<Order> orderListFromDb = orderService.getAllOrdersByCustomerId(customerId);
+        JsonResponse jsonResponse;
+        List<Order> orderListFromDb = orderService.getAllOrdersByCustomerId(customerId);
 
-            if (orderListFromDb.isEmpty()) {
-                jsonResponse = new JsonResponse(false, "No orders available to display for customer with id " + customerId, null);
-                return new ResponseEntity<>(jsonResponse, HttpStatus.NOT_FOUND);
-            }
+        jsonResponse = new JsonResponse(true, "All orders successfully retrieved", orderListFromDb);
+        return ResponseEntity.ok(jsonResponse);
 
-            jsonResponse = new JsonResponse(true, "All orders successfully retrieved", orderListFromDb);
-            return ResponseEntity.ok(jsonResponse);
-
-        } catch (NullPointerException e) {
-            //todo look into this line
-            logger.warn("Null pointer Exception (Cause: customer with id: "+ customerId
-                    + " does not exist.) Stack trace: " + Arrays.toString(e.getStackTrace()));
-
-            JsonResponse jsonResponse = new JsonResponse(false, "Customer does not exist with id " + customerId, null);
-            return new ResponseEntity<>(jsonResponse, HttpStatus.CONFLICT);
-        }
     }
 }

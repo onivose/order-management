@@ -29,20 +29,20 @@ public class OrderServiceImpl implements OrderService{
     }
 
     /**
-     * finds all orders in the database
      *
-     * @return List of orders or null if no orders are present
+     *
+     * @return
      */
-    @Override //works
+    @Override
     public List<Order> getAllOrders() {
         return this.orderRepo.findAll();
     }
 
     /**
-     * finds all orders in the database with total greater than the given value
+     *
      *
      * @param total
-     * @return List of orders or null if no orders are present
+     * @return
      */
     @Override
     public List<Order> findAllWithTotalGreaterThan(Double total) {
@@ -50,23 +50,17 @@ public class OrderServiceImpl implements OrderService{
     }
 
     /**
-     * finds all orders in the database with total less than the given value
+     *
      *
      * @param total
-     * @return List of orders or null if no orders are present
+     * @return
      */
     @Override
     public List<Order> findAllWithTotalLessThan(Double total) {
         return orderRepo.findByTotalLessThan(total);
     }
 
-    /**
-     * finds all orders for the customer wth the given id
-     *
-     * @param customerId
-     * @return List of orders or null if no orders are present for that customer
-     */
-    @Override // works
+    @Override
     public List<Order> getAllOrdersByCustomerId(Integer customerId) {
         Customer customer = customerRepo.findById(customerId).orElse(null);
 
@@ -74,101 +68,39 @@ public class OrderServiceImpl implements OrderService{
 
     }
 
-    /**
-     * gets a specific order by orderId
-     *
-     * @param orderId
-     * @return optional<order> -> need to use .isPresent() and .get() to retrieve order
-     */
-    @Override // works
+    @Override
     public Order getOrderById(Integer orderId) {
         return this.orderRepo.findById(orderId).orElse(null);
     }
 
-    /**
-     * creates an order with no products and persists it into the database
-     *
-     * @param customerId
-     * @return order
-     */
-    @Override // works
+    @Override
     public Order beginNewOrder(Integer customerId) {
 
         Optional<Customer> author = customerRepo.findById(customerId);
         if (author.isPresent()){
-            Order newOrder = Order.builder()
-                    .customer(author.get())
-                    .submitted(false)
-                    .total((double) 0)
-                    .build();
-
+            Order newOrder = new Order();
             return this.orderRepo.save(newOrder);
         }
         return null;
-    }
-
-    /**
-     * Calculates the total sum of an order
-     *
-     * @param order
-     * @return total sum of products in order
-     */
-    @Override
-    public Double calculateOrderTotal(Order order) {
-        List<Product> products = order.getProducts();
-        List<Double> productPrices = new ArrayList<>();
-        for (Product product : products){
-            productPrices.add(product.getPrice());
-        }
-        return productPrices.stream().mapToDouble(Double::doubleValue).sum(); //todo look into this line
     }
 
     @Override
     public Order submitOrder(List<Integer> productIds, Integer orderId) {
 
         Order orderToSubmit = this.getOrderById(orderId);
-
-        //---------------------------FOR TESTING ONLY, REMOVE AFTER TESTING--------------------------------------------
-        // productService.getInitialProducts(); //persists some products in the db to check submit order functionality
-        //-------------------------------------------------------------------------------------------------------------
-
+        productService.getInitialProducts();
         List<Product> orderProducts = new ArrayList<>();
 
-        for (Integer id : productIds){
-            // get the product by id
-            Product orderProduct = productService.getProductById(id);
-
-            // null check to make sure each product in the order exists
-            if (orderProduct == null){
-                return null;
-            }
-
-            // set purchased true so two customers can't buy the same product
-            orderProduct.setPurchased(true);
-
-            // set the order fk
+        for (int i = 0; i <= productIds.size(); i = i + 1){
+            Product orderProduct = productService.getProductById(productIds.get(1));
             orderProduct.setOrderFk(orderToSubmit);
-
-            //persist the product to the database
             productService.updateProduct(orderProduct);
-
-            // add product to orderProduct list
-            orderProducts.add(orderProduct);
         }
 
         orderToSubmit.setProducts(orderProducts);
-
-        // calculate and set order total before saving to db
-        orderToSubmit.setTotal(this.calculateOrderTotal(orderToSubmit));
-
-        // change order status to "submitted"
+        orderToSubmit.setTotal(null);
         orderToSubmit.setSubmitted(true);
-
-        // save and persist order in database
-        // have to use save and flush here because we need to retrieve the persisted entity later in this transaction
         orderRepo.saveAndFlush(orderToSubmit);
-
-        // return the persisted order to client via controller
         return this.getOrderById(orderToSubmit.getOrderId());
     }
 }

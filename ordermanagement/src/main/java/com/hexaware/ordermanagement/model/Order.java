@@ -48,10 +48,10 @@ public class Order {
     )
     private Customer customer;
 
-    // @OnDelete to make sure that if all the products of an order have been deleted, the order itself will also be deleted
+
     @OnDelete(action = OnDeleteAction.CASCADE)
     @OneToMany(mappedBy = "orderFk")
-    @JsonIgnoreProperties({"orderFk"}) // need this to avoid infinite loop which would cause stack overflow error to be raised
+    @JsonIgnoreProperties({"orderFk"})
     private List<Product> products = new ArrayList<>();
 
 

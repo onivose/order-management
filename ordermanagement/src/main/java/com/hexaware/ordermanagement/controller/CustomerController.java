@@ -29,9 +29,9 @@ public class CustomerController {
     }
 
     /**
-     * <H1>FOR INTERNAL USE ONLY</H1>
-     * used to pre-populate database with users
-     * not required as part of case study
+     *
+     *
+     *
      * @param customer
      * @return
      */
@@ -69,7 +69,6 @@ public class CustomerController {
                 JsonResponse jsonResponse = new JsonResponse(false, "Incorrect Password", null);
                 return new ResponseEntity<>(jsonResponse, HttpStatus.UNAUTHORIZED);
             } else {
-                // setting session for caching
                 httpSession.setAttribute("session", loginAttempt);
                 JsonResponse jsonResponse = new JsonResponse(true, "Successfully Logged In", loginAttempt);
                 return new ResponseEntity<>(jsonResponse, HttpStatus.OK);
@@ -82,11 +81,9 @@ public class CustomerController {
         Customer customer = (Customer) httpSession.getAttribute("session");
 
         if(customer == null){
-            // session is empty meaning no user is logged in
             JsonResponse jsonResponse = new JsonResponse(true, "No session found", null);
             return new ResponseEntity<>(jsonResponse, HttpStatus.NOT_FOUND);
         } else {
-            //session is found and user is logged in
             JsonResponse jsonResponse = new JsonResponse(true, "Session found", customer);
             return ResponseEntity.ok(jsonResponse);
         }

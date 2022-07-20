@@ -8,10 +8,10 @@ public interface ProductService {
 
     void getInitialProducts();
 
-    Product createProduct(Product product); // not required by case study (can manually add in front end)
+    Product createProduct(Product product);
 
     /**
-     * gets a specific product by productId
+     *
      * @param productId
      * @return order
      */
@@ -21,8 +21,5 @@ public interface ProductService {
 
     List<Product> getAllAvailableProducts();
 
-    //----------------------------------------------------------------------------------------------------------
-    // don't need this if adding products manually to order object in front end
-    // void addProductToOrder(Integer productId, Integer orderId); // not required by case study
 
 }
